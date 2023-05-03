@@ -93,19 +93,12 @@
             ballX += ballDX;
             ballY += ballDY;
 
-            // Ball collision with paddles
-            if (ballX - ballRadius <= paddleAX + paddleWidth && ballY >= paddleAY && ballY <= paddleAY + paddleHeight) {
-                ballDX *= -1;
-            } else if (ballX + ballRadius >= paddleBX && ballY >= paddleBY && ballY <= paddleBY + paddleHeight) {
-                ballDX *= -1;
+            // Did someone win game check winning conditions
+            if (paddleAScore >= 5 || paddleBScore >= 5) {
+                endGame();
             }
 
-            // Ball collision with walls
-            if (ballY - ballRadius <= 0 || ballY + ballRadius >= canvas.height) {
-                                ballDY *= -1;
-            }
-
-            // Ball out of bounds (score)
+            // Did someone score (ball out of bounds in X direction)
             if (ballX - ballRadius <= 0) {
                 paddleBScore++;
                 resetBall();
@@ -114,9 +107,35 @@
                 resetBall();
             }
 
-            // Check winning conditions
-            if (paddleAScore >= 5 || paddleBScore >= 5) {
-                endGame();
+            // Ball collision with paddles
+            if (ballX - ballRadius === paddleAX + paddleWidth && ballY >= paddleAY && ballY <= paddleAY + paddleHeight) {
+                ballDX *= -1;
+            } else if (ballX + ballRadius === paddleBX - paddleWidth && ballY >= paddleBY && ballY <= paddleBY + paddleHeight) {
+                ballDX *= -1;
+            }
+
+            // Ball collision with Top or Bottom walls
+            if (ballY - ballRadius <= 0 || ballY + ballRadius >= canvas.height) {
+                                ballDY *= -1;
+            }
+
+            // Draw Middle Wall
+            const wallWidth = paddleWidth * 0.75;
+            const wallX = (canvas.width - wallWidth) / 2;
+            const wallHeight = (canvas.height - ballRadius * 2*2.5)/2
+
+            // Ball collision Middle Walls and not in gap
+            if (ballY >= wallHeight && ballY <= (canvas.height - wallHeight)) {
+                // ball in line with wall skip other math
+            } else {
+                // Ball travel to left and Left Edge of Ball Hits Right side of Middle Wall
+                if (ballDX < 0 && ballX - ballRadius === (wallX + wallWidth / 2))  {
+                    ballDX *= -1; // Turn around in X direction
+                }
+                // Ball travel to right and Right Edge of Ball Hits Left side of Middle Wall
+                else if (ballDX > 0 && ballX + ballRadius === (wallX - wallWidth / 2)) {
+                    ballDX *= -1; // Turn around in X direction     
+                }
             }
         }
 
@@ -125,6 +144,7 @@
             ballX = canvas.width / 2;
             ballY = canvas.height / 2;
             ballDX *= -1;
+            // Randomly go up or down
             ballDY = Math.random() > 0.5 ? ballSpeed : -ballSpeed;
         }
 
@@ -153,6 +173,16 @@
             context.fillRect(paddleAX, paddleAY, paddleWidth, paddleHeight);
             context.fillRect(paddleBX, paddleBY, paddleWidth, paddleHeight);
 
+            // Draw Middle Wall
+            const wallWidth = paddleWidth * 0.75;
+            const wallX = (canvas.width - wallWidth) / 2;
+            const gapSize = ballRadius * 2 * 2.5; // Diameter (radius * 2) times X
+            const wallHeight = (canvas.height - gapSize) / 2;
+
+            context.fillStyle = "#FFF";
+            context.fillRect(wallX, 0, wallWidth, wallHeight);
+            context.fillRect(wallX, canvas.height - wallHeight, wallWidth, wallHeight);
+
             // Draw ball
             context.beginPath();
             context.arc(ballX, ballY, ballRadius, 0, Math.PI * 2, false);
@@ -169,6 +199,7 @@
 
         // Game loop
         function gameLoop() {
+            //console.log('You');
             movePaddles();
             update();
             draw();
